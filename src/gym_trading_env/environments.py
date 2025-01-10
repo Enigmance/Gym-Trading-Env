@@ -68,6 +68,9 @@ class TradingEnv(gym.Env):
     :param max_episode_duration: If a integer value is used, each episode will be truncated after reaching the desired max duration in steps (by returning `truncated` as `True`). When using a max duration, each episode will start at a random starting point.
     :type max_episode_duration: optional - int or 'max'
 
+    :param max_episode_duration: If a integer value is used, each episode will be truncated after reaching the desired max duration in steps (by returning `truncated` as `True`). When using a max duration, each episode will start at a random starting point.
+    :type max_episode_duration: optional - int or 'max'
+
     :param verbose: If 0, no log is outputted. If 1, the env send episode result logs.
     :type verbose: optional - int
     
@@ -224,7 +227,7 @@ class TradingEnv(gym.Env):
 
 
     
-    def add_limit_order(self, position, limit, persistent = False):
+    def add_limit_order(self, position, limit, persistent = True):
         self._limit_orders[position] = {
             'limit' : limit,
             'persistent': persistent
@@ -381,14 +384,15 @@ class MultiDatasetTradingEnv(TradingEnv):
         # Find the indexes of the less explored dataset
         potential_dataset_pathes = np.where(self.dataset_nb_uses == self.dataset_nb_uses.min())[0]
         # Pick one of them
-        random_int = np.random.randint(potential_dataset_pathes.size)
+        # random_int = np.random.randint(potential_dataset_pathes.size)
+        random_int = np.random.choice(potential_dataset_pathes)
         dataset_path = self.dataset_pathes[random_int]
         self.dataset_nb_uses[random_int] += 1 # Update nb use counts
 
         self.name = Path(dataset_path).name
         return self.preprocess(pd.read_pickle(dataset_path))
 
-    def reset(self, seed=None):
+    def reset(self, seed=None, options=None):
         self._episodes_on_this_dataset += 1
         if self._episodes_on_this_dataset % self.episodes_between_dataset_switch == 0:
             self._set_df(
